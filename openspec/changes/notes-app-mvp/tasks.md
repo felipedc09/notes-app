@@ -12,11 +12,11 @@ Greenfield repo — every task creates a new path under `backend/` or `frontend/
 | Chained PRs recommended | Yes |
 | Suggested split | PR 1 → PR 2 → PR 3 → PR 4 → PR 5 (user-selected, 5 slices) |
 | Delivery strategy | chained PRs (user-selected 5-slice split) |
-| Chain strategy | pending — stacked-to-main vs feature-branch-chain not yet confirmed |
+| Chain strategy | feature-branch-chain (resolved) — PR 1 targets `feat/notes-app-mvp`; PR 2+ target the immediate previous slice branch |
 
-Decision needed before apply: Yes
+Decision needed before apply: Resolved — feature-branch-chain
 Chained PRs recommended: Yes
-Chain strategy: pending
+Chain strategy: feature-branch-chain
 400-line budget risk: High
 
 Per-slice forecast (`additions + deletions`, authored code only):
@@ -46,26 +46,26 @@ Slices 1, 4, and 5 are expected to exceed 400 lines even after chaining; flagged
 ## Slice 1: Scaffold + Auth (PR 1)
 
 ### Backend
-- [ ] 1.1 Init `backend/` Django project (`manage.py`, `config/{settings,urls,wsgi}.py`, `requirements.txt`, `pytest.ini`, `.env.example`); wire `DATABASE_URL` via `dj-database-url` (SQLite dev/test, Postgres prod) (NFR-03)
-- [ ] 1.2 `apps/accounts/{serializers,views,urls}.py` — signup/login/logout/me endpoints scaffold (FR-01–FR-05)
-- [ ] 1.3 Session/CSRF settings in `config/settings.py`: `SESSION_COOKIE_HTTPONLY/SECURE`, `SAMESITE=Lax`, `CSRF_COOKIE_HTTPONLY=False`, `CSRF_TRUSTED_ORIGINS`, `AUTH_PASSWORD_VALIDATORS`, DRF `SessionAuthentication` + `IsAuthenticated` defaults (NFR-04)
-- [ ] 1.4 Signup view: `User.objects.create_user(username=email, email=email, password=…)` inside `transaction.atomic()`, logs the user in on success (FR-04)
-- [ ] 1.5 Login view: authenticate by email/password, generic `400 {"detail":"Invalid email or password."}` that never discloses which field (FR-05)
-- [ ] 1.6 Logout view (204) and `GET /api/auth/me` with `@ensure_csrf_cookie` (FR-05)
-- [ ] 1.7 `infra/nginx.conf` — prod reverse proxy: `/api/`, `/admin/`, `/django-static/` → gunicorn, rest → Next Node server (NFR-02)
+- [x] 1.1 Init `backend/` Django project (`manage.py`, `config/{settings,urls,wsgi}.py`, `requirements.txt`, `pytest.ini`, `.env.example`); wire `DATABASE_URL` via `dj-database-url` (SQLite dev/test, Postgres prod) (NFR-03)
+- [x] 1.2 `apps/accounts/{serializers,views,urls}.py` — signup/login/logout/me endpoints scaffold (FR-01–FR-05)
+- [x] 1.3 Session/CSRF settings in `config/settings.py`: `SESSION_COOKIE_HTTPONLY/SECURE`, `SAMESITE=Lax`, `CSRF_COOKIE_HTTPONLY=False`, `CSRF_TRUSTED_ORIGINS`, `AUTH_PASSWORD_VALIDATORS`, DRF `SessionAuthentication` + `IsAuthenticated` defaults (NFR-04)
+- [x] 1.4 Signup view: `User.objects.create_user(username=email, email=email, password=…)` inside `transaction.atomic()`, logs the user in on success (FR-04)
+- [x] 1.5 Login view: authenticate by email/password, generic `400 {"detail":"Invalid email or password."}` that never discloses which field (FR-05)
+- [x] 1.6 Logout view (204) and `GET /api/auth/me` with `@ensure_csrf_cookie` (FR-05)
+- [x] 1.7 `infra/nginx.conf` — prod reverse proxy: `/api/`, `/admin/`, `/django-static/` → gunicorn, rest → Next Node server (NFR-02)
 
 ### Frontend
-- [ ] 1.8 Scaffold `frontend/` Next.js App Router app (`package.json`, `next.config.ts` with `NODE_ENV`-guarded dev rewrite `/api/:path*` → `127.0.0.1:8000`, `tsconfig.json`) (NFR-02)
-- [ ] 1.9 `src/app/layout.tsx` loading Inria_Serif(700)/Inter(400,700) as CSS vars; `globals.css` Tailwind v4 `@theme` tokens; `styles/tokens.css` mirror (NFR-06, NFR-07)
-- [ ] 1.10 Atoms: `Button`, `TextField`, `PasswordField` (eye-icon mask/visible toggle) (FR-03)
-- [ ] 1.11 `organisms/AuthCard.tsx` + `src/app/signup/page.tsx` — "Yay, New Friend!", email+password, "Sign Up" button, link "We're already friends!" → `/login` (FR-01, FR-06)
-- [ ] 1.12 `src/app/login/page.tsx` — "Yay, You're Back!", "Login" button, link "Oops! I've never been here before" → `/signup` (FR-02, FR-06)
-- [ ] 1.13 `lib/api-client.ts` — `credentials:"same-origin"`, `X-CSRFToken` re-read from `document.cookie` on every unsafe request (NFR-04)
-- [ ] 1.14 `features/auth/useAuth.ts` + `AuthGate.tsx` — resolve `GET /api/auth/me` on boot, redirect `/login` on 401/403, `router.replace("/")` on signup/login 200 (Q2) (FR-04, FR-05)
+- [x] 1.8 Scaffold `frontend/` Next.js App Router app (`package.json`, `next.config.ts` with `NODE_ENV`-guarded dev rewrite `/api/:path*` → `127.0.0.1:8000`, `tsconfig.json`) (NFR-02)
+- [x] 1.9 `src/app/layout.tsx` loading Inria_Serif(700)/Inter(400,700) as CSS vars; `globals.css` Tailwind v4 `@theme` tokens; `styles/tokens.css` mirror (NFR-06, NFR-07)
+- [x] 1.10 Atoms: `Button`, `TextField`, `PasswordField` (eye-icon mask/visible toggle) (FR-03)
+- [x] 1.11 `organisms/AuthCard.tsx` + `src/app/signup/page.tsx` — "Yay, New Friend!", email+password, "Sign Up" button, link "We're already friends!" → `/login` (FR-01, FR-06)
+- [x] 1.12 `src/app/login/page.tsx` — "Yay, You're Back!", "Login" button, link "Oops! I've never been here before" → `/signup` (FR-02, FR-06)
+- [x] 1.13 `lib/api-client.ts` — `credentials:"same-origin"`, `X-CSRFToken` re-read from `document.cookie` on every unsafe request (NFR-04)
+- [x] 1.14 `features/auth/useAuth.ts` + `AuthGate.tsx` — resolve `GET /api/auth/me` on boot, redirect `/login` on 401/403, `router.replace("/")` on signup/login 200 (Q2) (FR-04, FR-05)
 
 ### Tests
-- [ ] 1.15 Backend integration (`APIClient(enforce_csrf_checks=True)`): signup sets `sessionid` with httpOnly/Secure/SameSite=Lax; unsafe method without `X-CSRFToken` → 403; login failure message never discloses which field (NFR-04, FR-05)
-- [ ] 1.16 Frontend component: password-field eye icon toggles masked/visible (FR-03)
+- [x] 1.15 Backend integration (`APIClient(enforce_csrf_checks=True)`): signup sets `sessionid` with httpOnly/Secure/SameSite=Lax; unsafe method without `X-CSRFToken` → 403; login failure message never discloses which field (NFR-04, FR-05)
+- [x] 1.16 Frontend component: password-field eye icon toggles masked/visible (FR-03)
 - Run: `cd backend && .venv/bin/python -m pytest -q`; `cd frontend && npm run test`
 
 ## Slice 2: Categories + FR-07 Seeding (PR 2)

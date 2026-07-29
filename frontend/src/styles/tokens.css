@@ -1,0 +1,17 @@
+/*
+ * Design tokens (NFR-06 colors/radius/shadow, NFR-07 fonts).
+ * Canonical :root declaration, imported once by app/globals.css and mirrored
+ * here for anything that needs the raw values outside the Tailwind @theme.
+ */
+:root {
+  --color-bg: #faf1e3;
+  --color-accent: #957139;
+  --color-heading: #88642a;
+
+  --color-cat-random: #ef9c66; /* Random Thoughts */
+  --color-cat-school: #fcdc94; /* School */
+  --color-cat-personal: #78aba8; /* Personal */
+
+  --radius-card: 11px;
+  --shadow-card: 1px 1px 2px rgb(0 0 0 / 0.25);
+}
