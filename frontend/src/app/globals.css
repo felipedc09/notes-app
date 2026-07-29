@@ -1,0 +1,45 @@
+@import "tailwindcss";
+@import "../styles/tokens.css";
+
+/* Design tokens (NFR-06, NFR-07) — Tailwind v4 @theme registration. */
+@theme inline {
+  --color-bg: var(--color-bg);
+  --color-accent: var(--color-accent);
+  --color-heading: var(--color-heading);
+  --color-cat-random: var(--color-cat-random);
+  --color-cat-school: var(--color-cat-school);
+  --color-cat-personal: var(--color-cat-personal);
+  --radius-card: var(--radius-card);
+  --shadow-card: var(--shadow-card);
+  --font-heading: var(--font-inria-serif);
+  --font-sans: var(--font-inter);
+}
+
+/* NFR-01: desktop-only fixed 1280 shell, no responsive breakpoints. */
+html,
+body {
+  min-width: 1280px;
+}
+
+body {
+  background: var(--color-bg);
+  color: var(--color-heading);
+  font-family: var(--font-inter), sans-serif;
+}
+
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
+  font-family: var(--font-inria-serif), serif;
+}
+
+/* FR-16: category-tinted surface shared by NoteCard and NoteEditor. */
+.note-surface {
+  background: color-mix(in srgb, var(--cat) 50%, transparent);
+  border: 3px solid var(--cat);
+  border-radius: var(--radius-card);
+  box-shadow: var(--shadow-card);
+}
