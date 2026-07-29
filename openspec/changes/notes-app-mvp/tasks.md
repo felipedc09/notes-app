@@ -70,17 +70,19 @@ Slices 1, 4, and 5 are expected to exceed 400 lines even after chaining; flagged
 
 ## Slice 2: Categories + FR-07 Seeding (PR 2)
 
-- [ ] 2.1 `apps/categories/models.py` — `Category(user FK, name, color, order)`, `UniqueConstraint(user,name)`, `ordering=["order"]` (FR-07, NFR-06)
-- [ ] 2.2 `apps/categories/constants.py::DEFAULT_CATEGORIES` — Random Thoughts `#ef9c66`, School `#fcdc94`, Personal `#78aba8`, order 0–2 (FR-07, NFR-06)
-- [ ] 2.3 `apps/categories/services.py::seed_default_categories(user)` — `get_or_create`, idempotent (FR-07)
-- [ ] 2.4 Call `seed_default_categories` from the signup view's `transaction.atomic()` block (1.4) (FR-07)
-- [ ] 2.5 `manage.py seed_categories` idempotent backfill management command (FR-07)
-- [ ] 2.6 `apps/categories/{serializers,views}.py` — `GET /api/categories` → `[{id,name,color,noteCount}]`, ordered by `order`, via `Category.objects.filter(user=…).annotate(note_count=Count("notes"))` in one query (NFR-05)
-- [ ] 2.7 `apps/categories/urls.py` wiring + migrations
+- [x] 2.1 `apps/categories/models.py` — `Category(user FK, name, color, order)`, `UniqueConstraint(user,name)`, `ordering=["order"]` (FR-07, NFR-06)
+- [x] 2.2 `apps/categories/constants.py::DEFAULT_CATEGORIES` — Random Thoughts `#ef9c66`, School `#fcdc94`, Personal `#78aba8`, order 0–2 (FR-07, NFR-06)
+- [x] 2.3 `apps/categories/services.py::seed_default_categories(user)` — `get_or_create`, idempotent (FR-07)
+- [x] 2.4 Call `seed_default_categories` from the signup view's `transaction.atomic()` block (1.4) (FR-07)
+- [x] 2.5 `manage.py seed_categories` idempotent backfill management command (FR-07)
+- [x] 2.6 `apps/categories/{serializers,views}.py` — `GET /api/categories` → `[{id,name,color,noteCount}]`, ordered by `order`, via `Category.objects.filter(user=…).annotate(note_count=Count("notes"))` in one query (NFR-05)
+
+  **Deviation (documented, not silent):** `apps.notes.Note` does not exist yet (slice 3), so `Category` has no `notes` reverse relation to `Count(...)` over. `views.py::CategoryListView.get_queryset()` instead annotates `note_count=Value(0, output_field=IntegerField())` — still exactly one query, correct value (there are zero notes anywhere in the system pre-slice-3), with a `TODO(slice-3)` comment marking the swap to `Count("notes")` once `Note.category` (`related_name="notes"`) lands.
+- [x] 2.7 `apps/categories/urls.py` wiring + migrations
 
 ### Tests
-- [ ] 2.8 Backend unit: `seed_default_categories` creates exactly 3 with NFR-06 colors, idempotent on repeat call (FR-07)
-- [ ] 2.9 Backend integration: `GET /api/categories` counts computed in exactly one query (`django_assert_num_queries`); categories don't leak between users (NFR-05)
+- [x] 2.8 Backend unit: `seed_default_categories` creates exactly 3 with NFR-06 colors, idempotent on repeat call (FR-07)
+- [x] 2.9 Backend integration: `GET /api/categories` counts computed in exactly one query (`django_assert_num_queries`); categories don't leak between users (NFR-05)
 - Run: `cd backend && .venv/bin/python -m pytest -q`
 
 ## Slice 3: Notes API (PR 3)
