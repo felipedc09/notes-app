@@ -104,22 +104,26 @@ Slices 1, 4, and 5 are expected to exceed 400 lines even after chaining; flagged
 
 ## Slice 4: Dashboard UI (PR 4)
 
-- [ ] 4.1 Atoms: `ColorDot.tsx`, `IconButton.tsx`
-- [ ] 4.2 `molecules/CategoryFilterItem.tsx` — color dot + name, count in parens hidden at 0 (A3) (FR-18)
-- [ ] 4.3 `features/categories/useCategories.ts` — react-query `["categories"]`
-- [ ] 4.4 `organisms/Sidebar.tsx` — "All Categories" first, then 3 categories, active-item highlight, `?category=` filter state (FR-18, FR-19)
-- [ ] 4.5 `features/notes/useNotes.ts` — react-query `["notes"]` with `?category` param, invalidated on every note/category mutation
-- [ ] 4.6 `lib/date-format.ts::formatCardDate()` — `today`/`yesterday` (lowercase) vs `Month D` via local calendar-day comparison (FR-22, A1, NFR-08)
-- [ ] 4.7 `lib/markdown.tsx` — `react-markdown` + `remark-gfm` wrapper, no `rehype-raw`, default `urlTransform`, links `rel="noopener noreferrer"` (FR-26)
-- [ ] 4.8 `molecules/NoteCardMeta.tsx` + `organisms/NoteCard.tsx` — date/category/title/preview, `.note-surface` CSS (3px border + 50% `color-mix` fill) (FR-16, FR-20); title wraps unclamped, preview `disallowedElements`+`unwrapDisallowed`+`-webkit-line-clamp` ellipsis (FR-21, FR-26)
-- [ ] 4.9 `organisms/NoteGrid.tsx` — grid of `NoteCard`, ordered as returned by the API (FR-23)
-- [ ] 4.10 `organisms/EmptyState.tsx` — "I'm just here waiting for your charming notes…" + illustration, shown at zero notes (FR-08)
-- [ ] 4.11 `src/app/page.tsx` — dashboard shell wiring Sidebar+NoteGrid+EmptyState behind `AuthGate`, `min-w-[1280px]` fixed shell, no breakpoints (NFR-01)
+- [x] 4.1 Atoms: `ColorDot.tsx`, `IconButton.tsx`
+- [x] 4.2 `molecules/CategoryFilterItem.tsx` — color dot + name, count in parens hidden at 0 (A3) (FR-18)
+- [x] 4.3 `features/categories/useCategories.ts` — react-query `["categories"]`
+- [x] 4.4 `organisms/Sidebar.tsx` — "All Categories" first, then 3 categories, active-item highlight, `?category=` filter state (FR-18, FR-19)
+- [x] 4.5 `features/notes/useNotes.ts` — react-query `["notes"]` with `?category` param, invalidated on every note/category mutation
+- [x] 4.6 `lib/date-format.ts::formatCardDate()` — `today`/`yesterday` (lowercase) vs `Month D` via local calendar-day comparison (FR-22, A1, NFR-08)
+- [x] 4.7 `lib/markdown.tsx` — `react-markdown` + `remark-gfm` wrapper, no `rehype-raw`, default `urlTransform`, links `rel="noopener noreferrer"` (FR-26)
+- [x] 4.8 `molecules/NoteCardMeta.tsx` + `organisms/NoteCard.tsx` — date/category/title/preview, `.note-surface` CSS (3px border + 50% `color-mix` fill) (FR-16, FR-20); title wraps unclamped, preview `disallowedElements`+`unwrapDisallowed`+`-webkit-line-clamp` ellipsis (FR-21, FR-26)
+- [x] 4.9 `organisms/NoteGrid.tsx` — grid of `NoteCard`, ordered as returned by the API (FR-23)
+- [x] 4.10 `organisms/EmptyState.tsx` — "I'm just here waiting for your charming notes…" + illustration, shown at zero notes (FR-08)
+- [x] 4.11 `src/app/page.tsx` — dashboard shell wiring Sidebar+NoteGrid+EmptyState behind `AuthGate`, `min-w-[1280px]` fixed shell, no breakpoints (NFR-01)
+
+  **Note (not a deviation):** `page.tsx` splits into an outer `Home` shell and an inner `DashboardBody` wrapped in `<Suspense>`, because `DashboardBody` reads `useSearchParams()` (the `?category=` filter) and Next.js 16 fails a static production build ("Missing Suspense boundary with useSearchParams") without it. `.note-surface` (FR-16) was already present in `globals.css` from slice 1 and is reused as-is.
 
 ### Tests
-- [ ] 4.12 Frontend unit: `formatCardDate` day boundaries, lowercase, no year (FR-22, A1, NFR-08); markdown renderer escapes `<script>` and drops `javascript:` href (FR-26)
-- [ ] 4.13 Component (RTL + msw): `NoteCard` 3px border + 50% fill from `--cat` (FR-16); title wraps/preview clamps (FR-21); sidebar hides count at 0, shows at ≥1 (A3, FR-18); empty-state copy (FR-08)
-- [ ] 4.14 E2E (Playwright, 1280×832): signup → lands on dashboard "All Categories" (Q2); category filter switches grid contents (FR-19)
+- [x] 4.12 Frontend unit: `formatCardDate` day boundaries, lowercase, no year (FR-22, A1, NFR-08); markdown renderer escapes `<script>` and drops `javascript:` href (FR-26)
+- [x] 4.13 Component (RTL + msw): `NoteCard` 3px border + 50% fill from `--cat` (FR-16); title wraps/preview clamps (FR-21); sidebar hides count at 0, shows at ≥1 (A3, FR-18); empty-state copy (FR-08)
+- [x] 4.14 E2E (Playwright, 1280×832): signup → lands on dashboard "All Categories" (Q2); category filter switches grid contents (FR-19)
+
+  **Environment note:** `npx playwright install chromium` (without `--with-deps`, which needs interactive `sudo`) downloaded a working Chromium — verified with a direct `chromium.launch()` smoke test before trusting the suite. `playwright.config.ts` starts both dev servers itself (`webServer`); the Django leg needed `cwd: "../backend"` so the `DATABASE_URL=sqlite:///db.sqlite3` in `backend/.env` (copied from `.env.example`, gitignored, `COOKIE_SECURE=False`) resolves relative to `backend/`, not `frontend/`. Both specs in `e2e/dashboard.spec.ts` pass against the real dev servers.
 - Run: `cd frontend && npm run test && npm run test:e2e`
 
 ## Slice 5: Editor + Markdown + FR-27 Discard (PR 5)
