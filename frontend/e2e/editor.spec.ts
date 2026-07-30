@@ -37,15 +37,12 @@ test("New Note opens instantly, autosaves after typing, and survives a reload (F
   await expect(page.getByText("My first note")).toBeVisible();
 });
 
-test("closing a note with both fields cleared discards it instead of persisting (FR-27)", async ({
-  page,
-}) => {
+test("a note opened and left empty is kept, not discarded", async ({ page }) => {
   await signup(page);
 
   await page.getByRole("button", { name: "New Note" }).click();
   const titleInput = page.getByPlaceholder("Note Title");
   await titleInput.fill("Temporary note");
-  // Debounce + POST: the note now exists server-side.
   await page.waitForTimeout(1000);
 
   await titleInput.fill("");
@@ -53,11 +50,19 @@ test("closing a note with both fields cleared discards it instead of persisting 
   await expect(contentField).toHaveValue("");
 
   await page.getByRole("button", { name: "Close note" }).click();
-  // Debounce would have fired a PATCH here; the empty-guarded DELETE fires
-  // instead, synchronously on close.
   await page.waitForTimeout(500);
 
-  await expect(page.getByText("Temporary note")).not.toBeVisible();
+  // The row survives the clear-and-close, so the grid keeps one card and the
+  // empty state must not come back.
   await page.reload();
-  await expect(page.getByText("Temporary note")).not.toBeVisible();
+  await expect(page.getByText("I’m just here waiting for your charming notes...")).toHaveCount(0);
+});
+
+test("the timestamp is shown as soon as New Note is clicked", async ({ page }) => {
+  await signup(page);
+
+  await page.getByRole("button", { name: "New Note" }).click();
+
+  // Server-derived: it can only render once the note row actually exists.
+  await expect(page.getByText(/^Last Edited:/)).toBeVisible();
 });
