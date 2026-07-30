@@ -13,6 +13,9 @@ filtered from a fixed sidebar of three categories seeded per account.
 
 ## Table of contents
 
+- [Process summary](#process-summary)
+- [Key design and technical decisions](#key-design-and-technical-decisions)
+- [AI tools, and how they were used](#ai-tools-and-how-they-were-used)
 - [Stack](#stack)
 - [Repository layout](#repository-layout)
 - [Prerequisites](#prerequisites)
@@ -24,6 +27,202 @@ filtered from a fixed sidebar of three categories seeded per account.
 - [Publishing to production](#publishing-to-production)
 - [Project documentation](#project-documentation)
 - [Troubleshooting](#troubleshooting)
+
+---
+
+## Process summary
+
+This application was not produced in one pass from a prompt. It was built **spec-first**: a written
+specification before any design, a design before any task list, a task list before any code. Each
+stage produced a document that is committed to this repository, so the reasoning behind the code is
+still readable.
+
+The workflow is Spec-Driven Development (SDD), run through **gentle-ai**. Nine stages ran, each
+handled by a separate agent with a fresh context and a narrow job, with a coordinating agent holding
+the thread and validating each stage before starting the next.
+
+| Stage | Produced |
+|---|---|
+| `init` | Project configuration and detected stack |
+| `propose` | Scope, exclusions, slice plan |
+| `spec` | Acceptance criteria per domain, as testable Given/When/Then scenarios |
+| `design` | Technical decisions, each with rationale and rejected alternatives |
+| `tasks` | 59 items for the MVP — 65 including the later Figma-conformance slice — each tagged with the requirements it satisfies |
+| `apply` ×5 | Implementation, one reviewable slice at a time |
+| `verify` | An independent audit against the specification |
+
+**Scope was never invented.** The specification arrived with six unresolved questions — password
+rules, the sign-up button label, pagination, date casing, timestamp formats, whether to show a zero
+count. The agents did not quietly pick answers; they carried them as explicit blockers until a human
+resolved all six. Those answers were recorded in
+[`decisions.md`](openspec/changes/notes-app-mvp/decisions.md) and treated as binding.
+
+The human decided scope, stack, product behavior and delivery shape. The agents decided everything
+technical — data models, API shapes, component structure, library choices, test strategy.
+
+**Delivery** was six chained pull requests, each stacked on the previous so a reviewer sees only that
+slice: planning artifacts → scaffold + auth → categories → notes API → dashboard → editor. Four
+further PRs followed for a CSRF fix, a behavior change, Figma conformance, and documentation. Every
+commit uses conventional commit format and none carries AI attribution.
+
+### What went wrong
+
+An honest account has to include this.
+
+**The original execution route collapsed mid-project.** The intent was to drive the build through an
+existing agent configured as a development lead. Three problems surfaced in sequence: that agent
+delegates rather than writes code, and the tool it delegates to was not installed; its configured
+model identifiers had been retired by the provider; and once fixed, the provider's free daily quota
+turned out to be exhausted account-wide. Planning had already completed, so nothing was lost — the
+work moved to a different runtime with the same process and the same artifact files.
+
+**Estimates were significantly wrong, and said so.** The task breakdown forecast ~2,250 lines. The
+real total was roughly 4,050. Every slice reported its actual size against its forecast rather than
+absorbing the difference quietly.
+
+**Transient failures were surfaced, not hidden.** The design stage failed three times on provider
+overload errors; rather than retrying indefinitely or silently downgrading the approach, it was
+raised as a decision for the human.
+
+Full account: [`AGENT_WORK_SUMMARY.md`](AGENT_WORK_SUMMARY.md).
+
+---
+
+## Key design and technical decisions
+
+Each of these was a real fork with a rejected alternative. Full rationale lives in
+[`design.md`](openspec/changes/notes-app-mvp/design.md).
+
+### Architecture
+
+**Same-origin deployment.** One public hostname in front of both processes — nginx routes `/api` to
+Django and everything else to Next.js; in development a Next rewrite does the same job. This keeps
+the session cookie **first-party**, so no CORS, no cross-site cookie handling, and no third-party
+cookie restrictions. *Rejected:* separate hostnames with CORS, which forces `SameSite=None` and makes
+the cookie subject to browser privacy controls.
+
+**Server-side sessions, not JWT.** An httpOnly cookie cannot be read by JavaScript, so an XSS bug
+cannot exfiltrate the credential. Logout is real — the session is destroyed server-side. *Rejected:*
+JWT in `localStorage`, which is readable by any script on the page and cannot be revoked before
+expiry.
+
+**Category counts are server-derived.** `noteCount` is annotated in one query rather than computed
+client-side, so the sidebar cannot drift from the data.
+
+### Decisions that prevented specific bugs
+
+These three were caught at design time, before any code existed.
+
+**Category seeding runs in a service, not a data migration.** Every new account needs three default
+categories. A migration runs once over rows that already exist and would never see a future signup —
+the bug would have appeared for the second user onward. It is a service called during account
+creation instead.
+
+**`last_edited` uses `default=timezone.now`, never `auto_now`.** The obvious Django idiom updates the
+timestamp on *every* save, so merely recategorizing a note would silently jump it to the top of a
+grid sorted by last edited. The bump rule lives in the serializer and fires only when title or
+content actually changed.
+
+**A single in-flight save lock.** All writes for a draft funnel through one promise chain, so the
+creating `POST` always resolves — and the id is known — before any `PATCH` fires. Without it, fast
+typing during the debounce window creates duplicate notes.
+
+### Frontend
+
+**Markdown renders through React elements, never `dangerouslySetInnerHTML`.** `react-markdown`
+escapes embedded HTML structurally rather than sanitizing it after the fact, so a `<script>` tag in
+note content cannot execute. `rehype-raw` is deliberately absent and documented as never-add — it
+would reopen exactly that injection sink.
+
+**The category dropdown is an ARIA listbox, not a native `<select>`.** A browser renders `<option>`
+elements through the operating system, so the popup cannot receive any CSS. Matching the design meant
+owning the popup as DOM — and owning the keyboard behavior a native select provides for free, which
+is implemented and tested rather than assumed.
+
+**Atomic design with a container/presentational split.** Components are atoms → molecules →
+organisms; data fetching lives in `features/*` hooks, so presentational components stay
+prop-driven and testable without a network.
+
+**Design tokens as CSS custom properties.** Colors, radius, shadow and fonts are declared once in
+`styles/tokens.css`. Body copy resolves through `--color-text`, so per-component color overrides were
+*deleted* rather than reassigned when the palette changed.
+
+### Backend
+
+**A DEBUG-only loopback CSRF middleware.** Django compares CSRF origins as exact `scheme://host:port`
+strings and supports no port wildcard, so `CSRF_TRUSTED_ORIGINS` cannot express "any localhost port"
+— which editor port forwarding requires. The middleware relaxes only the origin comparison, only for
+loopback hosts, only when `DEBUG` is on; the CSRF token is still fully verified. It is middleware
+rather than a setting because DRF builds its own `CSRFCheck` per request and never consults the
+configured middleware instance.
+
+**`PATCH`, not `PUT`.** Autosave sends only what changed, so a partial update is the honest verb.
+
+**`on_delete=PROTECT` on a note's category.** Categories have no delete affordance, and a protected
+foreign key makes an orphaned note structurally impossible rather than merely unlikely.
+
+### One requirement was deliberately reversed
+
+FR-27 originally required that a note opened and closed while still empty must not persist. It was
+later reversed by product decision: the note is created **on open** so its timestamp is real and
+immediately visible, and an empty note is **kept**. The trade-off — every "New Note" click leaves a
+note behind — was stated and accepted. Recorded in
+[`AMENDMENTS.md`](openspec/changes/notes-app-mvp/AMENDMENTS.md); the original design section is
+marked superseded in place rather than rewritten.
+
+---
+
+## AI tools, and how they were used
+
+| Tool | Role |
+|---|---|
+| **gentle-ai** | The SDD framework itself — phase agents, artifact store, skills, persona |
+| **Claude Code** (Opus) | Coordinating agent plus every phase sub-agent that wrote code |
+| **Figma MCP server** | Read the design file directly for design-to-code conformance |
+| **Playwright** | Drove a real browser so visual claims were observed, not asserted |
+| **Context7 / Engram MCP** | Library documentation lookup and persistent project memory |
+
+### How they were actually used
+
+**Direction, not autopilot.** The human set scope, stack, product behavior and delivery shape. The
+model proposed technical approaches with rejected alternatives, and implemented only after the
+specification and design were written and reviewed.
+
+**One agent per stage, with fresh context.** Each SDD phase ran as a separate sub-agent with a narrow
+job. The coordinator validated each stage's output before starting the next — commits confirmed to
+exist, test suites re-run independently, specific constraints grepped out of the source. An agent
+reporting on its own work is not evidence.
+
+**An independent audit.** A separate agent, explicitly told not to trust the implementers'
+self-reports, read the source and re-ran every command. Verdict on the 35 requirements: **34 pass, 1
+partial, 0 fail**. The single partial is a wording matter the implementing agent disclosed itself —
+the spec says the timestamp updates "in real-time" and it updates via a half-second debounce.
+
+**Design-to-code read from the source of truth.** Rather than eyeballing screenshots, the Figma MCP
+server was queried for the actual component nodes; spacing, colors, weights and asset geometry were
+taken from the file and cited by node id.
+
+### Where AI got it wrong, and how that was caught
+
+This matters more than the successes.
+
+**A test that passed for the wrong reason.** Tests written for the CSRF middleware used
+`force_authenticate`, which bypasses `SessionAuthentication` — and therefore the CSRF check under
+test. They returned green whether or not the fix existed. The accompanying negative test exposed it;
+they were rewritten to perform a real session login, and the fix was then removed to confirm the
+suite actually reproduces the bug.
+
+**A confident but incomplete diagnosis.** A "saving is broken" report was first traced to a missing
+config value. That was real, but it was not the cause — the failure persisted. The actual cause was
+found by measuring the **byte length of the 403 response body** and matching it against each CSRF
+failure mode, which identified an untrusted origin 22 characters long.
+
+**A regression introduced by an obvious-looking fix.** Removing a leading slash from a URL pattern to
+silence a cosmetic warning re-routed the note detail endpoint to `/api/notes42`. Django's own
+resolver was used to confirm it before reverting.
+
+The pattern: every claim that mattered was verified against the running system, and when the
+verification contradicted the claim, the claim was corrected rather than defended.
 
 ---
 
