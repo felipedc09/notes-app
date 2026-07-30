@@ -196,6 +196,26 @@ observed passing.
 
 ---
 
+## Amendments after the initial build
+
+Everything above describes the project as delivered on 29–30 July 2026 and is left unchanged, so the
+record of what was designed, built and audited stays accurate. Behavior has since moved on in one
+respect.
+
+**FR-27 was reversed on 30 July 2026: empty notes now persist.** A note is created when the editor
+opens rather than on first content, and closing it while blank keeps it instead of discarding it.
+
+This was a product decision by the maintainer, not a defect found in the audit. It is worth recording
+because it inverts one of the scope decisions described above — the narrowly guarded delete endpoint
+still exists and is still tested, but the client no longer calls it. The trade-off accepted is that
+every "New Note" click now leaves a note behind, including one closed immediately.
+
+The section *"What was deliberately not built"* should be read with that in mind: general note
+deletion remains absent, but the empty-note guard it describes is no longer part of the running
+behavior.
+
+---
+
 ## Where to look next
 
 | To understand | Read |
@@ -205,4 +225,5 @@ observed passing.
 | Why the code is shaped as it is | `openspec/changes/notes-app-mvp/design.md` |
 | What was built, and requirement coverage | `openspec/changes/notes-app-mvp/tasks.md` |
 | Whether it does what was specified | `openspec/changes/notes-app-mvp/verify-report.md` |
+| What changed after delivery | `openspec/changes/notes-app-mvp/AMENDMENTS.md` |
 | How to run it | `README.md` |

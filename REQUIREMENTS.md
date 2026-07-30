@@ -5,13 +5,17 @@
 > scope. Source tags: **demo**, **design**, **demo+design**, **stated**
 > (stakeholder decision), **inferred**.
 
-## Changelog (v5)
+## Changelog (v6)
 
-- **Auth: session-based auth selected** — server-side Django sessions with an
-  httpOnly cookie; deployed same-origin. The last open architectural decision
-  is closed.
-- *(v4 set Markdown content, discard-empty, and server-side counts; v3
-  confirmed the stack and moved deletion to Wishlist; v2 reconciled the
+- **FR-27 reversed: empty notes now persist.** A note is created when the
+  editor opens — so its Last Edited timestamp is real and visible immediately
+  — and is kept on close even when both fields are blank. This replaces the
+  v5 discard-empty rule. Consequence: every "New Note" click leaves a note,
+  including one closed straight away.
+- *(v5 selected session-based auth — server-side Django sessions with an
+  httpOnly cookie, deployed same-origin — closing the last open architectural
+  decision. v4 set Markdown content, discard-empty, and server-side counts;
+  v3 confirmed the stack and moved deletion to Wishlist; v2 reconciled the
   design.)*
 
 ## Summary
@@ -66,7 +70,7 @@ MoSCoW priority is **inferred** — no source ranks features (see Assumptions).
 | FR-24 | Clicking a note shall open it for viewing and inline editing of title and content (click the text to edit). | Must | demo+design |
 | FR-25 | Editing a note's title or content shall update its Last Edited timestamp automatically. | Must | demo+design |
 | FR-26 | The system shall render Markdown content as formatted output (e.g., bullet lists) in the preview card and read view; authoring is raw Markdown in the plain editor field. | Should | stated + design (cards show rendered lists) |
-| FR-27 | If a note is closed with both its title and content empty, the system shall discard it rather than persist it. | Must | stated |
+| FR-27 | A note shall be created when the editor is opened, and shall persist thereafter even if its title and content are both left empty. | Must | stated (v6 — reverses the v5 discard-empty rule) |
 
 ## Non-Functional Requirements
 
