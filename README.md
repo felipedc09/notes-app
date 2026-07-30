@@ -65,27 +65,6 @@ slice: planning artifacts → scaffold + auth → categories → notes API → d
 further PRs followed for a CSRF fix, a behavior change, Figma conformance, and documentation. Every
 commit uses conventional commit format and none carries AI attribution.
 
-### What went wrong
-
-An honest account has to include this.
-
-**The original execution route collapsed mid-project.** The intent was to drive the build through an
-existing agent configured as a development lead. Three problems surfaced in sequence: that agent
-delegates rather than writes code, and the tool it delegates to was not installed; its configured
-model identifiers had been retired by the provider; and once fixed, the provider's free daily quota
-turned out to be exhausted account-wide. Planning had already completed, so nothing was lost — the
-work moved to a different runtime with the same process and the same artifact files.
-
-**Estimates were significantly wrong, and said so.** The task breakdown forecast ~2,250 lines. The
-real total was roughly 4,050. Every slice reported its actual size against its forecast rather than
-absorbing the difference quietly.
-
-**Transient failures were surfaced, not hidden.** The design stage failed three times on provider
-overload errors; rather than retrying indefinitely or silently downgrading the approach, it was
-raised as a decision for the human.
-
-Full account: [`AGENT_WORK_SUMMARY.md`](AGENT_WORK_SUMMARY.md).
-
 ---
 
 ## Key design and technical decisions
