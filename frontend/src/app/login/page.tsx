@@ -1,5 +1,6 @@
 "use client";
 
+import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState, type FormEvent } from "react";
@@ -40,6 +41,14 @@ export default function LoginPage() {
     <main className="flex min-h-screen items-center justify-center bg-[var(--color-bg)] px-4">
       <AuthCard
         heading="Yay, You're Back!"
+        illustration={
+          <Image
+            src="/illustrations/login.png"
+            alt="A cactus in a pot"
+            width={95}
+            height={114}
+          />
+        }
         footer={
           <Link
             href="/signup"
@@ -49,30 +58,32 @@ export default function LoginPage() {
           </Link>
         }
       >
-        <form className="flex flex-col gap-4" onSubmit={handleSubmit} noValidate>
-          <TextField
-            label="Email address"
-            name="email"
-            type="email"
-            autoComplete="email"
-            required
-            value={email}
-            onChange={(event) => setEmail(event.target.value)}
-          />
-          <PasswordField
-            label="Password"
-            name="password"
-            autoComplete="current-password"
-            required
-            value={password}
-            onChange={(event) => setPassword(event.target.value)}
-          />
+        <form className="flex w-full flex-col" onSubmit={handleSubmit} noValidate>
+          <div className="flex flex-col gap-[13px]">
+            <TextField
+              label="Email address"
+              name="email"
+              type="email"
+              autoComplete="email"
+              required
+              value={email}
+              onChange={(event) => setEmail(event.target.value)}
+            />
+            <PasswordField
+              label="Password"
+              name="password"
+              autoComplete="current-password"
+              required
+              value={password}
+              onChange={(event) => setPassword(event.target.value)}
+            />
+          </div>
           {formError && (
-            <p role="alert" className="text-sm text-red-600">
+            <p role="alert" className="mt-[13px] text-sm text-red-600">
               {formError}
             </p>
           )}
-          <Button type="submit" disabled={login.isPending}>
+          <Button type="submit" className="mt-[43px]" disabled={login.isPending}>
             Login
           </Button>
         </form>

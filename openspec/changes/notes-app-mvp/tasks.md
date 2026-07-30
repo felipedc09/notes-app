@@ -206,8 +206,15 @@ full detail.
       bottom of the surface to the top (right-aligned).
 - [x] 6.3 Updated the corresponding assertions in `EmptyState.test.tsx`, `NoteEditor.test.tsx`,
       `e2e/dashboard.spec.ts`, and `e2e/editor.spec.ts`.
-- [ ] 6.4 Illustrations (bubble-tea cup, sleeping cat, cactus) — outstanding, blocked on the
-      stakeholder providing exportable asset files. Placeholder SVGs intentionally left in place.
+- [x] 6.4 Illustrations (bubble-tea cup, sleeping cat, cactus) — real assets exported from Figma
+      and wired in: `EmptyState.tsx`'s placeholder SVG replaced by `empty-state.png` (297×296);
+      `AuthCard.tsx` gained an `illustration` prop, `/signup` renders `signup.png` (188×134) and
+      `/login` renders `login.png` (95×114). See `decisions.md` §"Design-conformance pass, part 2".
+- [x] 6.6 `AuthCard.tsx` layout: removed the white card/shadow (`bg-white`,
+      `shadow-[var(--shadow-card)]`, `max-w-md`) not present in the design; content is now
+      centered directly on the page background at `max-w-[384px]`, heading enlarged to a centered
+      `text-5xl`, vertical rhythm approximated from the design frame. See `decisions.md`
+      §"Design-conformance pass, part 2".
 
 ### Tests
 - [x] 6.5 Full verification sweep re-run (see apply return summary for exact output):
