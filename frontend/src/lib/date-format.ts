@@ -40,3 +40,36 @@ export function formatCardDate(
   }
   return MONTH_DAY_FORMATTER.format(date);
 }
+
+const EDITOR_TIMESTAMP_FORMATTER = new Intl.DateTimeFormat("en-US", {
+  month: "long",
+  day: "numeric",
+  year: "numeric",
+  hour: "numeric",
+  minute: "2-digit",
+  hour12: true,
+});
+
+/**
+ * FR-14 / Decision A2: `Last Edited: Month D, YYYY at h:mm am/pm`, e.g.
+ * "Last Edited: July 21, 2024 at 8:39pm". Assembled from
+ * `Intl.DateTimeFormat` parts rather than the formatted string directly,
+ * because `Intl` yields `8:39 PM` (uppercase, space before the marker) and
+ * the spec wants `8:39pm` (lowercase, no space) — intentionally different
+ * from the card format (`formatCardDate`), which is deliberately terser.
+ */
+export function formatEditorTimestamp(isoDate: string): string {
+  const date = new Date(isoDate);
+  const parts = EDITOR_TIMESTAMP_FORMATTER.formatToParts(date);
+  const part = (type: Intl.DateTimeFormatPartTypes) =>
+    parts.find((entry) => entry.type === type)?.value ?? "";
+
+  const month = part("month");
+  const day = part("day");
+  const year = part("year");
+  const hour = part("hour");
+  const minute = part("minute");
+  const dayPeriod = part("dayPeriod").toLowerCase();
+
+  return `Last Edited: ${month} ${day}, ${year} at ${hour}:${minute}${dayPeriod}`;
+}
