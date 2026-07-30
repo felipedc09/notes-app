@@ -234,20 +234,25 @@ All endpoints are session-authenticated and scoped to the requesting user. Unsaf
 | `POST` | `/api/notes` | Create a note |
 | `GET` | `/api/notes/{id}` | Retrieve a note |
 | `PATCH` | `/api/notes/{id}` | Partial update — `PUT` is not supported |
-| `DELETE` | `/api/notes/{id}` | Discard an **empty** note only (see below) |
+| `DELETE` | `/api/notes/{id}` | Empty-note guard — **no longer called by the UI** (see below) |
 
 Notes are **not paginated** — the full list is returned.
 
 ### Two behaviors worth knowing
 
-**Notes are created on first content, not on open.** Clicking "New Note" opens an in-memory draft
-with no network request. The first keystroke triggers a debounced `POST`; later keystrokes `PATCH`. A
-single in-flight lock ensures the `POST` resolves before any `PATCH`, so fast typing can't create
-duplicates.
+**Notes are created on open, and empty notes are kept.** Clicking "New Note" fires a `POST`
+immediately, so the note has a real id and a server-derived Last Edited timestamp from the moment the
+editor opens. Later keystrokes `PATCH`. A single in-flight lock ensures the `POST` resolves before
+any `PATCH`, so fast typing can't create duplicates, and a guard ref means a StrictMode double-mount
+cannot create a second note.
 
-**`DELETE` is an empty-guard, not general deletion.** It returns `204` only when the note's title and
-content are both blank; otherwise `409`. Its sole purpose is discarding a note that was opened and
-closed without content. Deleting real notes is intentionally not implemented.
+The practical consequence: **every "New Note" click leaves a note behind**, even one closed straight
+away. That is intended (FR-27, v6) and reverses the earlier discard-empty behavior.
+
+**`DELETE` is an empty-guard, and the UI no longer calls it.** It still returns `204` only when the
+note's title and content are both blank, otherwise `409`, and it remains covered by tests — but since
+empty notes now persist, nothing in the client invokes it. Deleting real notes is still intentionally
+not implemented.
 
 ---
 

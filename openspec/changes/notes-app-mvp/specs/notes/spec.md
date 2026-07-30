@@ -95,13 +95,17 @@ Implement notes management for notes-app MVP covering FR-09 through FR-17, FR-24
 - **And** the raw Markdown source shall be used for authoring in the editor
 - **And** no live-preview toolbar shall be present in the editor
 
-### FR-27: Empty note discard
-- **Given** a note is created with placeholder text
-- **When** the user closes the note
-- **Then** if both title and content are empty
-- **And** the note shall be discarded and not persisted
-- **And** no empty note record shall be created in the database
-- **And** the user shall not see the note when returning to the dashboard
+### FR-27: Empty notes persist (v6 — reverses the original discard rule)
+- **Given** the user clicks "New Note"
+- **When** the editor opens
+- **Then** the note record shall be created immediately via the backend
+- **And** its Last Edited timestamp shall be server-derived and displayed at once
+- **When** the user then closes the note with both title and content empty
+- **Then** the note shall be kept, not discarded
+- **And** the user shall still see the note when returning to the dashboard
+- **And** the empty-guarded `DELETE` endpoint shall remain available but unused by the client
+
+> Supersedes the original FR-27 ("empty note discard"). See `../../AMENDMENTS.md`.
 
 ## Resolved Decisions Applied
 

@@ -142,6 +142,13 @@ clobber the untouched one.
 
 ### FR-27: create fires on first content, not on open
 
+> **SUPERSEDED (30 July 2026).** This section records the original design and the
+> reasoning behind it; it no longer describes the running behavior. FR-27 was
+> reversed by maintainer decision: the note is now created **on open**, and an
+> empty note is **kept** on close. The "Rejected" option at the end of this
+> section is, in effect, what was subsequently adopted — minus the unconditional
+> `DELETE`, which was never added. See `../AMENDMENTS.md`.
+
 The notes spec is explicit — *"no empty note record shall be created in the database"* — and WL-01 keeps
 unconditional deletion out of scope. Therefore:
 

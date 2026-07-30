@@ -30,7 +30,7 @@ changes:
   tracking: "manual and automated change tracking"
 
 requirements:
-  version: "v5"
+  version: "v6"
   functional: 27
   non_functional: 8
   data_model: "Django ORM with User, Category, Note models"
