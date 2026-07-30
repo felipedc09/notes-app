@@ -1,4 +1,4 @@
-from django.db.models import IntegerField, Value
+from django.db.models import Count
 from rest_framework import generics
 
 from .models import Category
@@ -10,18 +10,15 @@ class CategoryListView(generics.ListAPIView):
     ordered by `order`, with a server-computed `noteCount` (NFR-05).
 
     Scoped to `request.user` so categories never leak between users.
-
-    TODO(slice-3): `apps.notes.models.Note` doesn't exist yet. Once it
-    lands with `category = ForeignKey(Category, related_name="notes")`,
-    swap the static `Value(0)` annotation below for
-    `Count("notes")` so `noteCount` reflects real notes — still in the
-    same single query, per NFR-05. Until Notes exist, 0 is the correct
-    value for every category, not a placeholder faking the aggregation.
+    `note_count` is a real `Count("notes")` aggregation over
+    `apps.notes.models.Note.category` (`related_name="notes"`), still in
+    exactly one query (NFR-05, asserted by
+    `test_counts_computed_in_exactly_one_query`).
     """
 
     serializer_class = CategorySerializer
 
     def get_queryset(self):
         return Category.objects.filter(user=self.request.user).annotate(
-            note_count=Value(0, output_field=IntegerField())
+            note_count=Count("notes")
         )

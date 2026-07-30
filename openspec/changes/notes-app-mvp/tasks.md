@@ -77,7 +77,7 @@ Slices 1, 4, and 5 are expected to exceed 400 lines even after chaining; flagged
 - [x] 2.5 `manage.py seed_categories` idempotent backfill management command (FR-07)
 - [x] 2.6 `apps/categories/{serializers,views}.py` — `GET /api/categories` → `[{id,name,color,noteCount}]`, ordered by `order`, via `Category.objects.filter(user=…).annotate(note_count=Count("notes"))` in one query (NFR-05)
 
-  **Deviation (documented, not silent):** `apps.notes.Note` does not exist yet (slice 3), so `Category` has no `notes` reverse relation to `Count(...)` over. `views.py::CategoryListView.get_queryset()` instead annotates `note_count=Value(0, output_field=IntegerField())` — still exactly one query, correct value (there are zero notes anywhere in the system pre-slice-3), with a `TODO(slice-3)` comment marking the swap to `Count("notes")` once `Note.category` (`related_name="notes"`) lands.
+  **Deviation resolved in slice 3 (was documented, not silent, as of slice 2):** `apps.notes.Note` did not exist yet at slice-2 apply time, so `Category` had no `notes` reverse relation to `Count(...)` over. `views.py::CategoryListView.get_queryset()` temporarily annotated `note_count=Value(0, output_field=IntegerField())` with a `TODO(slice-3)` comment. Now that `apps/notes/models.py::Note.category` (`related_name="notes"`) exists (task 3.1), `views.py` was swapped to the real `Category.objects.filter(user=…).annotate(note_count=Count("notes"))` — still exactly one query (`test_counts_computed_in_exactly_one_query_with_notes_present`), with `test_note_counts_reflect_real_notes_per_category` asserting correct per-category, per-user counts.
 - [x] 2.7 `apps/categories/urls.py` wiring + migrations
 
 ### Tests
@@ -87,17 +87,19 @@ Slices 1, 4, and 5 are expected to exceed 400 lines even after chaining; flagged
 
 ## Slice 3: Notes API (PR 3)
 
-- [ ] 3.1 `apps/notes/models.py` — `Note(user FK, category FK PROTECT, title blank=True, content blank=True, created_at auto_now_add, last_edited default=timezone.now — NOT auto_now)`, `ordering=["-last_edited","-id"]`, indexes (FR-11, FR-13)
-- [ ] 3.2 `apps/notes/serializers.py` — `NoteSerializer` with `categoryName`/`categoryColor` denormalized via `select_related("category")` (FR-11, FR-16)
-- [ ] 3.3 Serializer `update()`: set `last_edited = timezone.now()` only when incoming `title`/`content` differs from stored value; never on a category-only change (FR-13, FR-25)
-- [ ] 3.4 `apps/notes/views.py` — `ListCreateAPIView` for `GET/POST /api/notes`: queryset scoped to `request.user`, `?category=` filter, `-lastEdited` order, unpaginated (FR-09, FR-10, FR-19, FR-23)
-- [ ] 3.5 `RetrieveUpdateDestroyAPIView` for `GET/PATCH/DELETE /api/notes/{id}` — PATCH (not PUT) is partial; `get_queryset()` scoped to owner → 404 for another user's note id (FR-15, FR-24)
-- [ ] 3.6 DELETE guard: 204 only if `title` and `content` are both blank after `.strip()`; else `409 {"detail":"Only an empty note can be discarded."}` (FR-27)
-- [ ] 3.7 `apps/notes/urls.py` wiring + migrations
+- [x] 3.1 `apps/notes/models.py` — `Note(user FK, category FK PROTECT, title blank=True, content blank=True, created_at auto_now_add, last_edited default=timezone.now — NOT auto_now)`, `ordering=["-last_edited","-id"]`, indexes (FR-11, FR-13)
+- [x] 3.2 `apps/notes/serializers.py` — `NoteSerializer` with `categoryName`/`categoryColor` denormalized via `select_related("category")` (FR-11, FR-16)
+- [x] 3.3 Serializer `update()`: set `last_edited = timezone.now()` only when incoming `title`/`content` differs from stored value; never on a category-only change (FR-13, FR-25)
+- [x] 3.4 `apps/notes/views.py` — `ListCreateAPIView` for `GET/POST /api/notes`: queryset scoped to `request.user`, `?category=` filter, `-lastEdited` order, unpaginated (FR-09, FR-10, FR-19, FR-23)
+- [x] 3.5 `RetrieveUpdateDestroyAPIView` for `GET/PATCH/DELETE /api/notes/{id}` — PATCH (not PUT) is partial; `get_queryset()` scoped to owner → 404 for another user's note id (FR-15, FR-24)
+- [x] 3.6 DELETE guard: 204 only if `title` and `content` are both blank after `.strip()`; else `409 {"detail":"Only an empty note can be discarded."}` (FR-27)
+- [x] 3.7 `apps/notes/urls.py` wiring + migrations
+
+  **Deviation (documented, not silent):** `apps/notes/urls.py` is mounted at prefix `"api/notes"` (no trailing slash, config/urls.py) so the collection endpoint resolves to exactly `/api/notes` per design.md §3 — matching `apps/categories/urls.py`'s no-trailing-slash convention. Because the app is mounted without a trailing slash but needs a second (detail) route, `path("/<int:pk>", …)` carries its own leading `/` so string concatenation yields `/api/notes/<id>` rather than `/api/notes<id>`. This produces a harmless `urls.W002` system-check warning (does not fail `manage.py check`'s exit code) in exchange for an exact, redirect-free match of the literal API contract. Alternative considered and rejected: mounting with a trailing slash (`"api/notes/"`, mirroring `apps/accounts/urls.py`) — would silence the warning but change the collection endpoint to `/api/notes/`, diverging from design.md §3's literal path and requiring an APPEND_SLASH redirect hop for the documented `/api/notes` URL.
 
 ### Tests
-- [ ] 3.8 Backend unit: `last_edited` bumps on title/content change but NOT on category-only change (FR-13, FR-15, FR-25); discard guard rejects a non-blank note with 409 (FR-27)
-- [ ] 3.9 Backend integration: notes ordering `-lastEdited` with stable tiebreak (FR-23, FR-11); `?category=` filter (FR-19); another user's note id → 404 IDOR (FR-24); invalid/foreign `categoryId` → 400 (FR-11)
+- [x] 3.8 Backend unit: `last_edited` bumps on title/content change but NOT on category-only change (FR-13, FR-15, FR-25); discard guard rejects a non-blank note with 409 (FR-27)
+- [x] 3.9 Backend integration: notes ordering `-lastEdited` with stable tiebreak (FR-23, FR-11); `?category=` filter (FR-19); another user's note id → 404 IDOR (FR-24); invalid/foreign `categoryId` → 400 (FR-11)
 - Run: `cd backend && .venv/bin/python -m pytest -q`
 
 ## Slice 4: Dashboard UI (PR 4)
