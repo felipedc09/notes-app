@@ -128,19 +128,19 @@ Slices 1, 4, and 5 are expected to exceed 400 lines even after chaining; flagged
 
 ## Slice 5: Editor + Markdown + FR-27 Discard (PR 5)
 
-- [ ] 5.1 `molecules/CategorySelect.tsx` — single-select dropdown listing the 3 categories (FR-15)
-- [ ] 5.2 `organisms/NoteEditor.tsx` overlay on `/` (not a route): placeholders "Note Title"/"Pour your heart out…" cleared on edit start (FR-12); reuses `.note-surface` styling (4.8) (FR-16); top-right close control unmounting the overlay (FR-17); `formatEditorTimestamp()` in `lib/date-format.ts`, right-aligned "Last Edited: Month D, YYYY at h:mm am/pm" via `Intl.DateTimeFormat` parts (FR-14); reuses `lib/markdown.tsx` (4.7) for the note's read state before click-to-edit (FR-24, FR-26)
-- [ ] 5.3 Wire "New Note" pill button (top-right, "+" icon) into `page.tsx`/dashboard header, opening `NoteEditor` with an empty in-memory draft (no id, no request) — instant open (FR-09)
-- [ ] 5.4 `features/notes/useNoteDraft.ts` state machine: first keystroke → debounce 500ms → `POST /api/notes` → id; later keystrokes → debounce 500ms → `PATCH /api/notes/{id}`; single in-flight-save lock so the first POST resolves before any PATCH (FR-09, FR-10, R5)
-- [ ] 5.5 Click-to-edit inline title/content fields inside `NoteEditor` — clicking text swaps to an editable field, edits flow through `useNoteDraft` (FR-24, FR-25)
-- [ ] 5.6 Close handling in `useNoteDraft`: draft never persisted & both blank → in-memory discard, zero requests; persisted & both blank → `DELETE` (empty-guarded, 3.6) → 204; otherwise → flush pending edit then close (FR-17, FR-27)
-- [ ] 5.7 Wire `CategorySelect` (5.1) to `PATCH categoryId` on the open note; `invalidateQueries(["notes"])` + `(["categories"])` on every note/category mutation (FR-15)
+- [x] 5.1 `molecules/CategorySelect.tsx` — single-select dropdown listing the 3 categories (FR-15)
+- [x] 5.2 `organisms/NoteEditor.tsx` overlay on `/` (not a route): placeholders "Note Title"/"Pour your heart out…" cleared on edit start (FR-12); reuses `.note-surface` styling (4.8) (FR-16); top-right close control unmounting the overlay (FR-17); `formatEditorTimestamp()` in `lib/date-format.ts`, right-aligned "Last Edited: Month D, YYYY at h:mm am/pm" via `Intl.DateTimeFormat` parts (FR-14); reuses `lib/markdown.tsx` (4.7) for the note's read state before click-to-edit (FR-24, FR-26)
+- [x] 5.3 Wire "New Note" pill button (top-right, "+" icon) into `page.tsx`/dashboard header, opening `NoteEditor` with an empty in-memory draft (no id, no request) — instant open (FR-09)
+- [x] 5.4 `features/notes/useNoteDraft.ts` state machine: first keystroke → debounce 500ms → `POST /api/notes` → id; later keystrokes → debounce 500ms → `PATCH /api/notes/{id}`; single in-flight-save lock so the first POST resolves before any PATCH (FR-09, FR-10, R5)
+- [x] 5.5 Click-to-edit inline title/content fields inside `NoteEditor` — clicking text swaps to an editable field, edits flow through `useNoteDraft` (FR-24, FR-25)
+- [x] 5.6 Close handling in `useNoteDraft`: draft never persisted & both blank → in-memory discard, zero requests; persisted & both blank → `DELETE` (empty-guarded, 3.6) → 204; otherwise → flush pending edit then close (FR-17, FR-27)
+- [x] 5.7 Wire `CategorySelect` (5.1) to `PATCH categoryId` on the open note; `invalidateQueries(["notes"])` + `(["categories"])` on every note/category mutation (FR-15)
 
 ### Tests
-- [ ] 5.8 Frontend unit: exact `formatEditorTimestamp` string match (FR-14)
-- [ ] 5.9 Component (RTL + msw): draft state machine — single POST under rapid typing (R5, FR-09); DELETE only when both fields blank (FR-27); CSRF token re-read per unsafe request after login rotation (R6, NFR-04)
-- [ ] 5.10 E2E: New Note → type → reload → persists (FR-09, FR-10); open note → clear both fields → close → gone (FR-27)
-- [ ] 5.11 Pre-PR command sweep: `cd backend && .venv/bin/python -m pytest -q && python manage.py check && python manage.py makemigrations --check --dry-run`; `cd frontend && npm run test && npm run typecheck && npm run lint && npm run build && npm run test:e2e`
+- [x] 5.8 Frontend unit: exact `formatEditorTimestamp` string match (FR-14)
+- [x] 5.9 Component (RTL + msw): draft state machine — single POST under rapid typing (R5, FR-09); DELETE only when both fields blank (FR-27); CSRF token re-read per unsafe request after login rotation (R6, NFR-04)
+- [x] 5.10 E2E: New Note → type → reload → persists (FR-09, FR-10); open note → clear both fields → close → gone (FR-27)
+- [x] 5.11 Pre-PR command sweep: `cd backend && .venv/bin/python -m pytest -q && python manage.py check && python manage.py makemigrations --check --dry-run`; `cd frontend && npm run test && npm run typecheck && npm run lint && npm run build && npm run test:e2e`
 
 ---
 
@@ -175,6 +175,19 @@ Slices 1, 4, and 5 are expected to exceed 400 lines even after chaining; flagged
 | NFR-08 | 4.6, 4.12 *(gap closed)* |
 
 All 27 FRs and 8 NFRs are covered by at least one task; none unimplemented.
+
+**Post-apply verdict (all 5 slices complete):** every task cited above is
+now `[x]` and independently verified — backend `pytest` (40/40),
+`manage.py check`/`makemigrations --check` clean, frontend `vitest` (27/27
+including the slice 5 draft-lifecycle suite), `tsc --noEmit`, `eslint`,
+`next build`, and Playwright e2e (4/4, including the two slice 5 specs)
+all genuinely pass — see the apply return summary for exact command
+output. All 27 FRs and all 8 NFRs are implemented; none are stubbed,
+mocked, or deferred. One caveat, not a gap: FR-25 ("update in real-time")
+is satisfied as *automatic, no manual save action* (autosave debounced
+500ms per design.md §3/§8), not as a per-keystroke ticking clock — this
+matches the design's own testing strategy and A2's dual-format decision,
+which never call for sub-second timestamp refresh.
 
 ## Threat Matrix Carry-Forward
 
