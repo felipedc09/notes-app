@@ -6,6 +6,7 @@
   --color-bg: var(--color-bg);
   --color-accent: var(--color-accent);
   --color-heading: var(--color-heading);
+  --color-text: var(--color-text);
   --color-cat-random: var(--color-cat-random);
   --color-cat-school: var(--color-cat-school);
   --color-cat-personal: var(--color-cat-personal);
@@ -23,7 +24,7 @@ body {
 
 body {
   background: var(--color-bg);
-  color: var(--color-heading);
+  color: var(--color-text);
   font-family: var(--font-inter), sans-serif;
 }
 
@@ -34,6 +35,170 @@ h4,
 h5,
 h6 {
   font-family: var(--font-inria-serif), serif;
+}
+
+/*
+ * FR-26: typography for rendered Markdown.
+ *
+ * Tailwind's Preflight resets list markers, heading sizes and quote
+ * indentation to nothing, so `react-markdown` output arrives structurally
+ * correct but visually flat — a bulleted list renders as plain lines. These
+ * rules are scoped to `.markdown` so they restore that formatting inside
+ * note content only, and never leak into the app's own chrome.
+ */
+.markdown > :first-child {
+  margin-top: 0;
+}
+
+.markdown > :last-child {
+  margin-bottom: 0;
+}
+
+.markdown p,
+.markdown ul,
+.markdown ol,
+.markdown blockquote,
+.markdown pre,
+.markdown table {
+  margin-block: 0.5em;
+}
+
+.markdown ul,
+.markdown ol {
+  padding-inline-start: 18px;
+}
+
+.markdown ul {
+  list-style-type: disc;
+}
+
+.markdown ol {
+  list-style-type: decimal;
+}
+
+.markdown ul ul {
+  list-style-type: circle;
+}
+
+.markdown ul ul ul {
+  list-style-type: square;
+}
+
+.markdown li {
+  margin-block: 0.15em;
+}
+
+/* Nested lists sit tight against their parent item. */
+.markdown li > ul,
+.markdown li > ol {
+  margin-block: 0.15em;
+}
+
+.markdown h1,
+.markdown h2,
+.markdown h3,
+.markdown h4,
+.markdown h5,
+.markdown h6 {
+  font-weight: 700;
+  line-height: 1.25;
+  margin-block: 0.6em 0.3em;
+}
+
+.markdown h1 {
+  font-size: 1.5em;
+}
+
+.markdown h2 {
+  font-size: 1.3em;
+}
+
+.markdown h3 {
+  font-size: 1.15em;
+}
+
+.markdown a {
+  text-decoration: underline;
+}
+
+.markdown strong {
+  font-weight: 700;
+}
+
+.markdown em {
+  font-style: italic;
+}
+
+.markdown del {
+  text-decoration: line-through;
+}
+
+.markdown code {
+  background: color-mix(in srgb, var(--color-accent) 18%, transparent);
+  border-radius: 4px;
+  font-family: ui-monospace, "SFMono-Regular", Menlo, monospace;
+  font-size: 0.9em;
+  padding: 0.1em 0.35em;
+}
+
+.markdown pre {
+  background: color-mix(in srgb, var(--color-accent) 18%, transparent);
+  border-radius: var(--radius-card);
+  overflow-x: auto;
+  padding: 0.75em 1em;
+}
+
+.markdown pre code {
+  background: none;
+  padding: 0;
+}
+
+.markdown blockquote {
+  border-inline-start: 3px solid color-mix(in srgb, var(--color-accent) 50%, transparent);
+  padding-inline-start: 0.75em;
+}
+
+.markdown hr {
+  border: 0;
+  border-top: 1px solid color-mix(in srgb, var(--color-accent) 40%, transparent);
+  margin-block: 0.75em;
+}
+
+/* remark-gfm: tables, and task lists that carry their own checkbox. */
+.markdown table {
+  border-collapse: collapse;
+}
+
+.markdown th,
+.markdown td {
+  border: 1px solid color-mix(in srgb, var(--color-accent) 40%, transparent);
+  padding: 0.25em 0.5em;
+  text-align: left;
+}
+
+.markdown th {
+  font-weight: 700;
+}
+
+.markdown li:has(> input[type="checkbox"]) {
+  list-style: none;
+  margin-inline-start: -18px;
+}
+
+.markdown input[type="checkbox"] {
+  margin-inline-end: 0.4em;
+}
+
+/*
+ * Card previews are line-clamped (FR-20/FR-21), so per-block vertical
+ * margins would push visible lines out of the clamp. Markers and indentation
+ * still apply — only the spacing collapses.
+ */
+.markdown-preview p,
+.markdown-preview ul,
+.markdown-preview ol,
+.markdown-preview li {
+  margin-block: 0;
 }
 
 /* FR-16: category-tinted surface shared by NoteCard and NoteEditor. */

@@ -31,7 +31,7 @@ describe("NoteCard", () => {
 
   it("clamps the content preview with line-clamp for the ellipsis truncation (FR-21)", () => {
     render(<NoteCard note={baseNote} />);
-    const preview = screen.getByText("Short body").closest("div.line-clamp-4");
+    const preview = screen.getByText("Short body").closest("div.line-clamp-6");
     expect(preview).not.toBeNull();
   });
 

@@ -47,8 +47,15 @@ const markdownComponents: Components = {
  * reopen exactly the injection sink this component exists to close.
  */
 export function Markdown({ content, className, preview = false }: MarkdownProps) {
+  // `.markdown` restores the list markers, heading scale and quote styling
+  // that Tailwind's Preflight strips (globals.css); `.markdown-preview`
+  // collapses block spacing so line-clamped card previews stay tight.
+  const classes = ["markdown", preview && "markdown-preview", className]
+    .filter(Boolean)
+    .join(" ");
+
   return (
-    <div className={className}>
+    <div className={classes}>
       <ReactMarkdown
         remarkPlugins={[remarkGfm]}
         disallowedElements={preview ? PREVIEW_DISALLOWED_ELEMENTS : undefined}
