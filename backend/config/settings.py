@@ -11,6 +11,18 @@ from dotenv import load_dotenv
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 
+# Under pytest, ignore `.env`'s dev-only `COOKIE_SECURE=False` (needed by
+# Playwright's e2e suite, which drives `manage.py runserver` directly over
+# plain HTTP — see playwright.config.ts — and never goes through pytest).
+# `python-dotenv`'s `load_dotenv` below uses its default `override=False`,
+# so pre-setting the env var here, before `.env` is read, makes pytest
+# always exercise the production-safe cookie default (NFR-04) regardless
+# of the local dev `.env` file. `PYTEST_VERSION` is set by pytest itself
+# before any settings/plugin code runs, so this check is reliable even
+# though `.env` is loaded before pytest-django's own conftest hooks fire.
+if "PYTEST_VERSION" in os.environ:
+    os.environ.setdefault("COOKIE_SECURE", "True")
+
 # Local dev secrets live in backend/.env (gitignored). CI/prod set real env vars.
 load_dotenv(BASE_DIR / ".env")
 
