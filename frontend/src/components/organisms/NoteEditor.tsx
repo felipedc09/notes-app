@@ -57,19 +57,30 @@ export function NoteEditor({ note, categories, onClose }: NoteEditorProps) {
   }
 
   return (
-    <div className="fixed inset-0 z-10 flex items-center justify-center bg-black/30 p-8">
+    <div className="fixed inset-0 z-10 flex flex-col overflow-y-auto bg-[var(--color-bg)] px-[37px] pt-8 pb-8">
+      <div className="flex items-center justify-between gap-4">
+        <CategorySelect
+          categories={categories}
+          value={draft.categoryId}
+          onChange={draft.updateCategory}
+        />
+        <IconButton
+          icon={<CloseIcon />}
+          label="Close note"
+          onClick={handleClose}
+          className="!h-6 !w-6 !rounded-none hover:!bg-transparent"
+        />
+      </div>
+
       <div
-        className="note-surface flex h-full w-full max-w-3xl flex-col gap-3 overflow-y-auto p-8"
+        className="note-surface mt-3 flex flex-1 flex-col gap-3 p-8"
         style={{ "--cat": selectedCategory?.color ?? "#ffffff" } as CSSProperties}
       >
-        <div className="flex items-start justify-between gap-4">
-          <CategorySelect
-            categories={categories}
-            value={draft.categoryId}
-            onChange={draft.updateCategory}
-          />
-          <IconButton icon={<CloseIcon />} label="Close note" onClick={handleClose} />
-        </div>
+        {draft.lastEdited && (
+          <p className="text-right text-xs font-bold text-[var(--color-heading)]">
+            {formatEditorTimestamp(draft.lastEdited)}
+          </p>
+        )}
 
         {editingTitle ? (
           <input
@@ -92,7 +103,7 @@ export function NoteEditor({ note, categories, onClose }: NoteEditorProps) {
         {editingContent ? (
           <textarea
             value={draft.content}
-            placeholder="Pour your heart out…"
+            placeholder="Pour your heart out..."
             onChange={(event) => draft.updateContent(event.target.value)}
             onBlur={() => setEditingContent(false)}
             className="min-h-[300px] flex-1 resize-none bg-transparent text-[var(--color-heading)] outline-none placeholder:text-[var(--color-heading)]/50"
@@ -105,15 +116,9 @@ export function NoteEditor({ note, categories, onClose }: NoteEditorProps) {
             {draft.content ? (
               <Markdown content={draft.content} />
             ) : (
-              <span className="text-[var(--color-heading)]/50">Pour your heart out…</span>
+              <span className="text-[var(--color-heading)]/50">Pour your heart out...</span>
             )}
           </div>
-        )}
-
-        {draft.lastEdited && (
-          <p className="text-right text-xs font-bold text-[var(--color-heading)]">
-            {formatEditorTimestamp(draft.lastEdited)}
-          </p>
         )}
       </div>
     </div>

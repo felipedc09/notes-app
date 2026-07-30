@@ -25,7 +25,7 @@ test("New Note opens instantly, autosaves after typing, and survives a reload (F
   await expect(titleInput).toBeVisible();
 
   await titleInput.fill("My first note");
-  const contentField = page.getByPlaceholder("Pour your heart out…");
+  const contentField = page.getByPlaceholder("Pour your heart out...");
   await contentField.fill("Hello from the editor");
 
   // Debounce (500ms) plus the POST round trip.
@@ -49,7 +49,7 @@ test("closing a note with both fields cleared discards it instead of persisting 
   await page.waitForTimeout(1000);
 
   await titleInput.fill("");
-  const contentField = page.getByPlaceholder("Pour your heart out…");
+  const contentField = page.getByPlaceholder("Pour your heart out...");
   await expect(contentField).toHaveValue("");
 
   await page.getByRole("button", { name: "Close note" }).click();

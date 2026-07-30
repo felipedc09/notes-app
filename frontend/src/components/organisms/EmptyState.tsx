@@ -5,7 +5,7 @@ export function EmptyState() {
     <div className="flex flex-1 flex-col items-center justify-center gap-4 py-24 text-center">
       <EmptyStateIllustration />
       <p className="max-w-sm text-lg font-bold text-[var(--color-heading)]">
-        I&apos;m just here waiting for your charming notes&hellip;
+        I’m just here waiting for your charming notes...
       </p>
     </div>
   );

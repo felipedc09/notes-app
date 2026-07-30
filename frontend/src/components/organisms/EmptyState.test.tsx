@@ -6,7 +6,7 @@ describe("EmptyState (FR-08)", () => {
   it("shows the exact empty-state copy", () => {
     render(<EmptyState />);
     expect(
-      screen.getByText("I'm just here waiting for your charming notes…"),
+      screen.getByText("I’m just here waiting for your charming notes..."),
     ).toBeInTheDocument();
   });
 

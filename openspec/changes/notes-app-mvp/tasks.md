@@ -189,6 +189,31 @@ is satisfied as *automatic, no manual save action* (autosave debounced
 matches the design's own testing strategy and A2's dual-format decision,
 which never call for sub-second timestamp refresh.
 
+## Slice 6: Figma Design-Conformance Pass (post-MVP correction)
+
+Stakeholder supplied the actual Figma file after the MVP passed `sdd-verify` against
+`REQUIREMENTS.md`. Per `REQUIREMENTS.md`, the design is visual truth; this slice reconciles
+implementation with the reference screenshots. See `decisions.md` §"Design-conformance pass" for
+full detail.
+
+- [x] 6.1 Correct exact copy characters to match the design: `EmptyState.tsx` curly apostrophe +
+      three-period ellipsis; `NoteEditor.tsx` content placeholder (both states) three-period
+      ellipsis; `signup/page.tsx` and `login/page.tsx` footer links curly apostrophe. Left the
+      login heading's straight apostrophe untouched (design's own inconsistency).
+- [x] 6.2 `NoteEditor.tsx` layout: remove the `bg-black/30` scrim, widen the note surface to the
+      design's near-full-width treatment, move the category dropdown and close control out of
+      the tinted surface onto the page background above it, move "Last Edited: …" from the
+      bottom of the surface to the top (right-aligned).
+- [x] 6.3 Updated the corresponding assertions in `EmptyState.test.tsx`, `NoteEditor.test.tsx`,
+      `e2e/dashboard.spec.ts`, and `e2e/editor.spec.ts`.
+- [ ] 6.4 Illustrations (bubble-tea cup, sleeping cat, cactus) — outstanding, blocked on the
+      stakeholder providing exportable asset files. Placeholder SVGs intentionally left in place.
+
+### Tests
+- [x] 6.5 Full verification sweep re-run (see apply return summary for exact output):
+      `cd frontend && npm run test && npm run typecheck && npm run lint && npm run build && npm
+      run test:e2e`; `cd backend && .venv/bin/python -m pytest -q`.
+
 ## Threat Matrix Carry-Forward
 
 `design.md` marks the threat matrix N/A (no shell/subprocess/VCS/process-integration surface), but names three real trust boundaries whose RED tests are preserved above: session/CSRF (1.15, 5.9), per-user object ownership / IDOR (3.5, 3.9), and Markdown XSS (4.7, 4.12).

@@ -26,7 +26,7 @@ test("signup lands on the dashboard in the All Categories state", async ({ page 
   await expect(page.getByRole("button", { name: /^Personal/ })).toBeVisible();
 
   // FR-08: a brand-new user has zero notes.
-  await expect(page.getByText("I'm just here waiting for your charming notes…")).toBeVisible();
+  await expect(page.getByText("I’m just here waiting for your charming notes...")).toBeVisible();
 });
 
 test("category filter switches the active sidebar item and updates the URL (FR-19)", async ({

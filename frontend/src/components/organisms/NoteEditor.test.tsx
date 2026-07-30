@@ -57,7 +57,7 @@ describe("NoteEditor draft state machine (FR-09, FR-27, R5, R6)", () => {
     const user = userEvent.setup();
     renderEditor(null);
 
-    const content = screen.getByPlaceholderText("Pour your heart out…");
+    const content = screen.getByPlaceholderText("Pour your heart out...");
     await user.type(content, "Hello");
     // Well inside the 500ms debounce window — must not trigger a save yet.
     await new Promise((resolve) => setTimeout(resolve, 200));

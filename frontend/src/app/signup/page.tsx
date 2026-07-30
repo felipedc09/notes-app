@@ -40,7 +40,7 @@ export default function SignupPage() {
             href="/login"
             className="font-bold text-[var(--color-accent)] underline"
           >
-            We&apos;re already friends!
+            We’re already friends!
           </Link>
         }
       >

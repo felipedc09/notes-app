@@ -45,7 +45,7 @@ export default function LoginPage() {
             href="/signup"
             className="font-bold text-[var(--color-accent)] underline"
           >
-            Oops! I&apos;ve never been here before
+            Oops! I’ve never been here before
           </Link>
         }
       >
