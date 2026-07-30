@@ -5,6 +5,7 @@ from django.contrib.auth import get_user_model
 from rest_framework.test import APIClient
 
 from apps.categories.services import seed_default_categories
+from apps.notes.models import Note
 
 User = get_user_model()
 
@@ -58,3 +59,50 @@ class TestCategoryList:
         response = client.get("/api/categories")
 
         assert response.status_code == 403
+
+    def test_note_counts_reflect_real_notes_per_category(self):
+        # Task 2.6 follow-up (task 3.x): noteCount now comes from a real
+        # Count("notes") aggregation over apps.notes.models.Note, not a
+        # Value(0) placeholder — assert the counts are correct per category
+        # and per user.
+        user = _seeded_user("counts@example.com")
+        other_user = _seeded_user("counts-other@example.com")
+        random_thoughts, school, personal = user.categories.order_by("order")
+
+        Note.objects.create(user=user, category=random_thoughts)
+        Note.objects.create(user=user, category=random_thoughts)
+        Note.objects.create(user=user, category=school)
+        # Notes belonging to another user must never bleed into this
+        # user's counts.
+        Note.objects.create(user=other_user, category=other_user.categories.first())
+
+        client = APIClient()
+        client.force_authenticate(user=user)
+
+        response = client.get("/api/categories")
+
+        assert response.status_code == 200
+        counts = {c["name"]: c["noteCount"] for c in response.json()}
+        assert counts == {
+            "Random Thoughts": 2,
+            "School": 1,
+            "Personal": 0,
+        }
+
+    def test_counts_computed_in_exactly_one_query_with_notes_present(
+        self, django_assert_num_queries
+    ):
+        # Same NFR-05 single-query guarantee as
+        # test_counts_computed_in_exactly_one_query, but now with real Note
+        # rows in place of the old Value(0) placeholder.
+        user = _seeded_user("counts-query@example.com")
+        category = user.categories.first()
+        Note.objects.create(user=user, category=category)
+        Note.objects.create(user=user, category=category)
+        client = APIClient()
+        client.force_authenticate(user=user)
+
+        with django_assert_num_queries(1):
+            response = client.get("/api/categories")
+
+        assert response.status_code == 200
