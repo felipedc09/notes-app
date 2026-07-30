@@ -28,7 +28,7 @@ describe("Sidebar (FR-18, A3)", () => {
     push.mockClear();
   });
 
-  it("shows the count in parentheses only for categories with at least one note", async () => {
+  it("shows a bare count only for categories with at least one note", async () => {
     server.use(
       http.get("/api/categories", () =>
         HttpResponse.json([
@@ -42,10 +42,10 @@ describe("Sidebar (FR-18, A3)", () => {
     renderSidebar();
 
     expect(await screen.findByText("School")).toBeInTheDocument();
-    expect(screen.getByText("(3)")).toBeInTheDocument();
-    expect(screen.queryByText("(0)")).not.toBeInTheDocument();
-    // "All Categories" and the two zero-count categories render without any
-    // parenthesized count.
+    expect(screen.getByText("3")).toBeInTheDocument();
+    // "All Categories" and the two zero-count categories render no count at
+    // all — a bare "0" must never appear.
+    expect(screen.queryByText("0")).not.toBeInTheDocument();
     expect(screen.getByText("All Categories")).toBeInTheDocument();
   });
 

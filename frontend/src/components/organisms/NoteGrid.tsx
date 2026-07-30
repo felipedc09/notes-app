@@ -7,11 +7,17 @@ interface NoteGridProps {
   onSelect?: (id: number) => void;
 }
 
-/** FR-23: notes render in whichever order the API returns (`-lastEdited`
- * with a stable id tiebreak) — no client-side re-sorting. */
+/**
+ * FR-23: notes render in whichever order the API returns (`-lastEdited`
+ * with a stable id tiebreak) — no client-side re-sorting.
+ *
+ * Every card is the same size: `grid-cols-3` equalizes the widths, and the
+ * fixed 246px row height stops a long note from stretching its whole row.
+ * Cards clip their own overflow, so uniformity does not depend on content.
+ */
 export function NoteGrid({ notes, onSelect }: NoteGridProps) {
   return (
-    <div className="grid grid-cols-3 gap-4">
+    <div className="grid auto-rows-[246px] grid-cols-3 gap-x-[13px] gap-y-4">
       {notes.map((note) => (
         <NoteCard
           key={note.id}

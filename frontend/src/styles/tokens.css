@@ -6,7 +6,10 @@
 :root {
   --color-bg: #faf1e3;
   --color-accent: #957139;
+  /* Display type only — auth headings. Body copy uses --color-text. */
   --color-heading: #88642a;
+  /* Body copy: note cards, the editor, the sidebar and the dropdown. */
+  --color-text: #000000;
 
   --color-cat-random: #ef9c66; /* Random Thoughts */
   --color-cat-school: #fcdc94; /* School */

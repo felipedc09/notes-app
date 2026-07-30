@@ -77,7 +77,7 @@ export function NoteEditor({ note, categories, onClose }: NoteEditorProps) {
         style={{ "--cat": selectedCategory?.color ?? "#ffffff" } as CSSProperties}
       >
         {draft.lastEdited && (
-          <p className="text-right text-xs font-bold text-[var(--color-heading)]">
+          <p className="text-right text-xs font-bold">
             {formatEditorTimestamp(draft.lastEdited)}
           </p>
         )}
@@ -89,14 +89,14 @@ export function NoteEditor({ note, categories, onClose }: NoteEditorProps) {
             placeholder="Note Title"
             onChange={(event) => draft.updateTitle(event.target.value)}
             onBlur={() => setEditingTitle(false)}
-            className="w-full bg-transparent font-[family-name:var(--font-heading)] text-2xl font-bold text-[var(--color-heading)] outline-none placeholder:text-[var(--color-heading)]/50"
+            className="w-full bg-transparent font-[family-name:var(--font-heading)] text-2xl font-bold outline-none placeholder:text-[var(--color-text)]/50"
           />
         ) : (
           <h2
             onClick={() => setEditingTitle(true)}
-            className="cursor-text font-[family-name:var(--font-heading)] text-2xl font-bold break-words whitespace-pre-wrap text-[var(--color-heading)]"
+            className="cursor-text font-[family-name:var(--font-heading)] text-2xl font-bold break-words whitespace-pre-wrap"
           >
-            {draft.title || <span className="text-[var(--color-heading)]/50">Note Title</span>}
+            {draft.title || <span className="text-[var(--color-text)]/50">Note Title</span>}
           </h2>
         )}
 
@@ -106,17 +106,17 @@ export function NoteEditor({ note, categories, onClose }: NoteEditorProps) {
             placeholder="Pour your heart out..."
             onChange={(event) => draft.updateContent(event.target.value)}
             onBlur={() => setEditingContent(false)}
-            className="min-h-[300px] flex-1 resize-none bg-transparent text-[var(--color-heading)] outline-none placeholder:text-[var(--color-heading)]/50"
+            className="min-h-[300px] flex-1 resize-none bg-transparent outline-none placeholder:text-[var(--color-text)]/50"
           />
         ) : (
           <div
             onClick={() => setEditingContent(true)}
-            className="min-h-[300px] flex-1 cursor-text text-[var(--color-heading)]"
+            className="min-h-[300px] flex-1 cursor-text"
           >
             {draft.content ? (
               <Markdown content={draft.content} />
             ) : (
-              <span className="text-[var(--color-heading)]/50">Pour your heart out...</span>
+              <span className="text-[var(--color-text)]/50">Pour your heart out...</span>
             )}
           </div>
         )}

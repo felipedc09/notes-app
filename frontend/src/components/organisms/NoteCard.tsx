@@ -15,12 +15,14 @@ interface NoteCardProps {
  * class (globals.css) draws the 3px category-color border + 50% color-mix
  * fill from the `--cat` custom property. The title wraps in full and is
  * never clamped; only the content preview truncates with an ellipsis via
- * `-webkit-line-clamp`.
+ * `-webkit-line-clamp`. Six lines fills the 246px card (design.md: a 125px
+ * preview box) without letting a two-line title push the text past the
+ * card's edge.
  */
 export function NoteCard({ note, onSelect }: NoteCardProps) {
   return (
     <article
-      className="note-surface flex cursor-pointer flex-col gap-2 p-4"
+      className="note-surface flex h-full cursor-pointer flex-col gap-2 overflow-hidden p-4"
       style={{ "--cat": note.categoryColor } as CSSProperties}
       onClick={onSelect}
       role={onSelect ? "button" : undefined}
@@ -40,10 +42,10 @@ export function NoteCard({ note, onSelect }: NoteCardProps) {
         date={formatCardDate(note.lastEdited)}
         categoryName={note.categoryName}
       />
-      <h3 className="font-[family-name:var(--font-heading)] text-lg font-bold break-words whitespace-pre-wrap text-[var(--color-heading)]">
+      <h3 className="font-[family-name:var(--font-heading)] text-lg font-bold break-words whitespace-pre-wrap">
         {note.title}
       </h3>
-      <div className="line-clamp-4 overflow-hidden text-sm text-[var(--color-heading)]">
+      <div className="line-clamp-6 min-h-0 overflow-hidden text-sm">
         <Markdown content={note.content} preview />
       </div>
     </article>
