@@ -6,6 +6,8 @@ from rest_framework import permissions, status
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
+from apps.categories.services import seed_default_categories
+
 from .serializers import LoginSerializer, SignupSerializer, UserSerializer
 
 User = get_user_model()
@@ -26,6 +28,7 @@ class SignupView(APIView):
             user = User.objects.create_user(
                 username=email, email=email, password=password
             )
+            seed_default_categories(user)  # FR-07: 3 fixed categories per user
 
         login(request, user)
         return Response(UserSerializer(user).data, status=status.HTTP_201_CREATED)
