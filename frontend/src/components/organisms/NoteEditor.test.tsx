@@ -69,13 +69,13 @@ describe("NoteEditor draft state machine (FR-09, FR-27, R5, R6)", () => {
     expect(postCount).toBe(1);
   }, 10000);
 
-  it("DELETEs a persisted note when both fields are cleared and the editor is closed (FR-27)", async () => {
+  it("keeps a persisted note when both fields are cleared and the editor is closed", async () => {
     let deleteCalled = false;
+    let lastPatch: Partial<Note> | null = null;
     server.use(
-      // The empty-guard (backend 3.6) checks the *stored* row, so `close()`
-      // must flush the clearing edit before the DELETE can succeed.
       http.patch("/api/notes/5", async ({ request }) => {
         const body = (await request.json()) as Partial<Note>;
+        lastPatch = body;
         return HttpResponse.json(noteResponse({ id: 5, ...body }));
       }),
       http.delete("/api/notes/5", () => {
@@ -98,8 +98,29 @@ describe("NoteEditor draft state machine (FR-09, FR-27, R5, R6)", () => {
 
     await user.click(screen.getByRole("button", { name: "Close note" }));
 
-    await waitFor(() => expect(deleteCalled).toBe(true));
-    expect(onClose).toHaveBeenCalled();
+    await waitFor(() => expect(onClose).toHaveBeenCalled());
+    // The cleared state is saved, and the row survives.
+    expect(lastPatch).toEqual({ title: "", content: "" });
+    expect(deleteCalled).toBe(false);
+  }, 10000);
+
+  it("creates the note on open and shows its timestamp immediately", async () => {
+    let postBody: { title: string; content: string } | null = null;
+    server.use(
+      http.post("/api/notes", async ({ request }) => {
+        postBody = (await request.json()) as { title: string; content: string };
+        return HttpResponse.json(
+          noteResponse({ ...postBody, lastEdited: "2026-07-30T15:04:00.000Z" }),
+          { status: 201 },
+        );
+      }),
+    );
+
+    renderEditor(null);
+
+    // The timestamp is server-derived, so its presence proves the row exists.
+    await waitFor(() => expect(screen.getByText(/^Last Edited:/)).toBeInTheDocument());
+    expect(postBody).toEqual({ title: "", content: "", categoryId: 1 });
   }, 10000);
 
   it("re-reads the CSRF token from the cookie on every unsafe request, even after login rotation (R6, NFR-04)", async () => {

@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import { CATEGORIES_QUERY_KEY } from "@/features/categories/useCategories";
 import { apiFetch } from "@/lib/api-client";
@@ -33,15 +33,20 @@ export interface NoteDraft {
 }
 
 /**
- * Draft lifecycle state machine (design.md §3, FR-09/FR-10/FR-27, risk R5).
+ * Draft lifecycle state machine (design.md §3, FR-09/FR-10, risk R5).
  *
- * "New Note" produces a purely in-memory draft: no id, no request. The
- * first keystroke schedules a debounced `POST /api/notes`; every keystroke
- * after that schedules a debounced `PATCH /api/notes/{id}`. All network
- * writes for this draft are funneled through `enqueue`, a single promise
- * chain, so the first POST always resolves — and `idRef` is set — before
- * any later write fires. That single in-flight lock is what stops rapid
- * typing from creating duplicate notes.
+ * "New Note" creates the row immediately: opening the editor fires one
+ * `POST /api/notes` with empty fields, so the note has a real id and a
+ * server `lastEdited` to display from the moment it opens. Every keystroke
+ * after that schedules a debounced `PATCH /api/notes/{id}`.
+ *
+ * All network writes for this draft are funneled through `enqueue`, a
+ * single promise chain, so the opening POST always resolves — and `idRef`
+ * is set — before any later write fires. That single in-flight lock is what
+ * stops fast typing from racing ahead of the create.
+ *
+ * Empty notes persist: closing a note with both fields blank keeps it,
+ * rather than discarding it as the original FR-27 required.
  */
 export function useNoteDraft({ note, defaultCategoryId, onClose }: UseNoteDraftOptions): NoteDraft {
   const queryClient = useQueryClient();
@@ -57,6 +62,8 @@ export function useNoteDraft({ note, defaultCategoryId, onClose }: UseNoteDraftO
   const idRef = useRef<number | null>(note?.id ?? null);
   const categoryIdRef = useRef(categoryId);
   const persistedRef = useRef(note !== null);
+  // An existing note is already created; a new draft creates itself on open.
+  const createStartedRef = useRef(note !== null);
   const pendingRef = useRef<DraftFields | null>(null);
   const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const chainRef = useRef<Promise<unknown>>(Promise.resolve());
@@ -100,6 +107,20 @@ export function useNoteDraft({ note, defaultCategoryId, onClose }: UseNoteDraftO
     },
     [invalidate],
   );
+
+  // Create the row as soon as the editor opens for a brand-new note, so the
+  // timestamp is real and server-derived rather than a client guess. The ref
+  // is set before the request is issued, so neither a StrictMode double-mount
+  // nor a re-render can produce a second note.
+  useEffect(() => {
+    if (createStartedRef.current) {
+      return;
+    }
+    createStartedRef.current = true;
+    enqueue(() => performSave({ title: "", content: "" })).catch((error: unknown) => {
+      console.error("Failed to create note", error);
+    });
+  }, [enqueue, performSave]);
 
   const scheduleSave = useCallback(
     (fields: DraftFields) => {
@@ -171,32 +192,10 @@ export function useNoteDraft({ note, defaultCategoryId, onClose }: UseNoteDraftO
     const pending = pendingRef.current;
     pendingRef.current = null;
 
-    const finalTitle = pending ? pending.title : title;
-    const finalContent = pending ? pending.content : content;
-    const isBlank = finalTitle.trim() === "" && finalContent.trim() === "";
-
+    // A blank note is kept like any other: no empty-guard, no DELETE. Only
+    // the outstanding write still has to land before the editor closes.
     try {
-      if (isBlank) {
-        if (persistedRef.current) {
-          // The backend's empty-guard (3.6) checks the *stored* row, not
-          // what the client thinks the fields are. If a clearing edit is
-          // still pending, the server's copy is still the old non-blank
-          // content, and a DELETE against it would 409 — flush it first so
-          // the guard actually sees a blank note before the empty-guarded
-          // DELETE (backend 3.6).
-          if (pending) {
-            await enqueue(() => performSave(pending));
-          } else {
-            await chainRef.current;
-          }
-          await enqueue(() =>
-            apiFetch<void>(`/notes/${idRef.current}`, { method: "DELETE" }),
-          );
-          invalidate();
-        }
-        // Never persisted & both blank: in-memory discard, zero requests.
-      } else if (pending) {
-        // Otherwise: flush the pending edit (create-or-update) before close.
+      if (pending) {
         await enqueue(() => performSave(pending));
       } else {
         // No pending edit, but an earlier save may still be in flight.
@@ -207,7 +206,7 @@ export function useNoteDraft({ note, defaultCategoryId, onClose }: UseNoteDraftO
     } finally {
       onClose();
     }
-  }, [content, enqueue, invalidate, onClose, performSave, title]);
+  }, [enqueue, onClose, performSave]);
 
   return {
     title,
